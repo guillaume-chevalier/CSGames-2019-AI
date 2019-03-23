@@ -226,7 +226,7 @@ class Featurize(BaseEstimator, TransformerMixin):
             new_x.append(statistics.stdev(f))
 
 
-class NeuralNetwork(sklearn.neural_network.MLPClassifier):
+class NeuralNetwork(sklearn.neural_network.MLPRegressor):
 
     def transform(self, X, y=None):
         return self.predict(X)
@@ -258,7 +258,8 @@ def start():
                 early_stopping=True,
                 n_iter_no_change=30,
                 batch_size=2,
-                random_state=7
+                random_state=7,
+                verbose=True
             ))
         ])
 
