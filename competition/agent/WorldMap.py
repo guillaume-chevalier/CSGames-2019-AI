@@ -146,12 +146,14 @@ class WorldMap:
 
                 elif target['type'] == 'minion':
 
-                    new_state_after_move['player_target'][card[card_position]]]['health'] -= target['atk']  # Update our minion's hp
-                    new_state_after_move['opponent_target'][target[target_position]]]['health'] -= card['atk']  # Update their minion's hp
-                    if new_state_after_move['player_target'][card[card_position]]]['health'] <= 0:
+                    card_card_position_ = card_position
+
+                    new_state_after_move['player_target'][card_card_position_]['health'] -= target['atk']  # Update our minion's hp
+                    new_state_after_move['opponent_target'][target_position]['health'] -= card['atk']  # Update their minion's hp
+                    if new_state_after_move['player_target'][card_card_position_]['health'] <= 0:
                         # If our minion is dead, remove it
                         new_state_after_move['player_target'].pop(card_position)
-                    if new_state_after_move['opponent_target'][target[target_position]]]['health'] <= 0:
+                    if new_state_after_move['opponent_target'][target_position]['health'] <= 0:
                         # If their minion is dead, remove it
                         new_state_after_move['opponent_target'].pop(target_position)
 
@@ -174,6 +176,22 @@ class WorldMap:
         # TODO double check if there is no other conditions.
 
         return False
+
+    @staticmethod
+    def sanitize_state(state):
+        state = deepcopy(state)
+
+        for key in ["player_hand", "opponent_target", "player_target"]:
+            sk = state[key]
+
+            for item in sk:
+                if item["type"] == "minion":
+                    item["buffs"] = tuple(range(len(item["buffs"])))
+
+            state[key] = sk
+
+        return state
+
 
 def function_that_changes_the_state_from_card_id():
     return None

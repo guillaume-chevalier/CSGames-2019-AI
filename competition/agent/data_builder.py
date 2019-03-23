@@ -1,19 +1,21 @@
 import datetime
-import os
-import statistics
-import random
-import pickle
 import json
+import os
+import pickle
+import random
+import statistics
 from glob import glob
 
 import numpy as np
+import sklearn.neural_network
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import Pipeline
-import sklearn.neural_network
 from sklearn.utils.validation import check_is_fitted
 
 from agent.WorldMap import WorldMap
+
+PKL_MODEL_NAME = "model.pkl1"
 
 
 class DataSaver:
@@ -35,7 +37,7 @@ class DataSaver:
 
         for j in jsons[-1000:]:
             if ".json" in j:
-                with open(j, "r") as fppw:
+                with open(j, "r", encoding="utf-8") as fppw:
                     jj = json.load(fppw)
                 self.loaded_jsons.append(jj)
                 filenamme = j.split(os.sep)[-1]
@@ -54,7 +56,7 @@ class DataSaver:
     def _add_json(self, _json, was_success_integer):
         _date = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")
         filename = os.path.join(self.json_path, str(was_success_integer) + "_" + _date + ".json")
-        with open(filename, "w") as fpp:
+        with open(filename, "w", encoding="utf-8") as fpp:
             # print(_json)
             json.dump(_json, fpp)
 
@@ -242,8 +244,8 @@ def start():
     print('start')
 
     # LOAD MODEL.
-    if os.path.exists("model.pkl"):
-        with open("model.pkl", "rb") as pkl:
+    if os.path.exists(PKL_MODEL_NAME):
+        with open(PKL_MODEL_NAME, "rb") as pkl:
             PIPELINE = pickle.load(pkl)
 
     # OR CREATE MODEL.
@@ -277,6 +279,10 @@ def play(state):
     top_move_score = -1
 
     for move, new_state in world_map.get_possible_moves().items():
+
+        state = WorldMap.sanitize_state(state)
+        new_state = WorldMap.sanitize_state(new_state)
+
         X = [(state, move, new_state)]
         try:
             _ = check_is_fitted(PIPELINE.named_steps["model"], "coefs_")
@@ -307,7 +313,6 @@ def play(state):
 
 # Modify this function4, (None, None)
 def end(victory):
-
     if hasattr(victory, "__len__"):
         assert len(victory) == 1, victory
         victory = victory[0]
@@ -317,14 +322,13 @@ def end(victory):
 
     # RETRAIN.
     if IS_ONLINE_TRAINING:
-
         y = [int(victory) for _ in range(len(ALL_MY_MOVES_TRIPLETS))]
         DS.add_jsons(ALL_MY_MOVES_TRIPLETS, y)
 
         PIPELINE.fit(ALL_MY_MOVES_TRIPLETS, y)
 
         # SAVE.
-        with open("model.pkl", "wb") as pkl:
+        with open(PKL_MODEL_NAME, "wb") as pkl:
             pickle.dump(PIPELINE, pkl)
 
     return None
