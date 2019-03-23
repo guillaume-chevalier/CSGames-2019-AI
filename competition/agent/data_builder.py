@@ -57,12 +57,12 @@ class Featurize(BaseEstimator, TransformerMixin):
                     at_least_two_heros += 1
                     new_x.append(int(target["damaged"]))
                     new_x.append(target["health"])
-                    new_x.append(target["zone_position"])
+                    # new_x.append(target["zone_position"])
         assert at_least_two_heros == 2, "FAILURE."  # TODO: remove all asserts.
 
         # MY PLAYER CARDS:
         my_cards = [0 for _ in range(MAX_NUM_CARDS)]
-        my_cards_costs = [0 for _ in range(MAX_NUM_CARDS)]
+        my_cards_costs = [0 for _ in range(MAX_NUM_CARDS)]  # TODO: number of cards.
         for card in state["player_hand"]:
             #  _card = {'cost': 3, 'id': 12, 'type': 'spell', 'zone_position': 2}
             if card["type"] == "spell":
@@ -119,6 +119,7 @@ class Featurize(BaseEstimator, TransformerMixin):
                 my_minions_opwered[_id] = int(minion["powered_up"])
                 my_minions_turns[_id] = minion["turns_in_play"]
                 my_minions_zone_pos[_id] = minion["zone_position"]
+                # TODO: maybe many minions with same ID.
         _features = [my_minions_hp,
                      my_minions_max_hp,
                      my_minions_buffs,
@@ -140,6 +141,7 @@ class Featurize(BaseEstimator, TransformerMixin):
 
 
         # TARGETS:
+        # TODO: finally this is same as PLAYER MINIONS above but on game. 
 
         return None
 

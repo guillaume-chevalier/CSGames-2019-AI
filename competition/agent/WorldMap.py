@@ -72,16 +72,17 @@ class WorldMap:
         possible_moves_dict = dict()
 
         for move, new_state_after_move in self.get_all_possible_moves():
+            # TODO: remove
             print(move)
             print(new_state_after_move)
-            
+
             possible_moves_dict[move] = new_state_after_move
 
         return possible_moves_dict
 
     def get_all_possible_moves(self):
 
-        for card in self.state["player_hand"]: # Moves for cards in hand
+        for card in self.state["player_hand"]:  # Moves for cards in hand
             if card['type'] == 'minion':
                 new_state_after_move = self.compute_new_state_for_card(card, self.state)
                 is_move_possible = self.is_move_possible(card, self.state, new_state_after_move)
@@ -99,21 +100,20 @@ class WorldMap:
                         move = (2, (card['zone_position'], target['zone_position']))
                         yield move, new_state_after_move
 
-        for card in self.state['player_target']: # Moves for minions on the board
-            if card['type'] == 'minion':
+        for minion in self.state['player_target']:  # Moves for minions on the board
+            if minion['type'] == 'minion':
                 for target in self.state['opponent_target']:
-                    new_state_after_move = self.compute_new_state_for_card(card, self.state, target)
-                    is_move_possible = self.is_move_possible(card, self.state, new_state_after_move)
+                    new_state_after_move = self.compute_new_state_for_card(minion, self.state, target)
+                    is_move_possible = self.is_move_possible(minion, self.state, new_state_after_move)
 
                     if is_move_possible:
-                        move = (3, (card['zone_position'], target['zone_position']))
+                        move = (3, (minion['zone_position'], target['zone_position']))
                         yield move, new_state_after_move
 
-
-        if self.state["player_mana"] >= 2: # Hero power
+        if self.state["player_mana"] >= 2:  # Hero power
             new_state_after_move = deepcopy(self.state)
             new_state_after_move['player_mana'] -= 2
-            new_state_after_move['opponent_target'][0]['health'] -= 2 # Target enemy hero
+            new_state_after_move['opponent_target'][0]['health'] -= 2  # Target enemy hero
 
             yield (0, (None, None)), new_state_after_move
 
@@ -122,30 +122,40 @@ class WorldMap:
 
         new_state_after_move = deepcopy(state)
         if card["type"] == "minion":
-            if target is None: # If played from hand
-                new_state_after_move['player_target'].append(card) # Add card to the board state
-                new_state_after_move['player_hand'].pop(card['zone_position']-1) # Remove card from hand
+            if target is None:  # If played from hand, otherwise is still in card deck
+                new_state_after_move['player_target'].append(card)  # Add card to the board state
+                new_state_after_move['player_hand'].pop(card['zone_position'] - 1)  # Remove card from hand
+                # TODO: use enumerate's i  as function argument instead??
 
-            elif target != None and card['cant_attack'] is False: # Attacking with the minion from board and you can use it.
+            elif target is not None and card[
+                'cant_attack'] is False:  # Attacking with the minion from board and you can use it.
                 if target['type'] == 'hero':
-                    new_state_after_move['opponent_target'][0]['health'] -= card['atk'] # Remove
+                    new_state_after_move['opponent_target'][0]['health'] -= card['atk']  # Remove
 
                 elif target['type'] == 'minion':
-                    if target['atk'] >= card['health'] and card['atk'] >= target['health']: # If both minions die
-                        new_state_after_move['player_target'].pop(card['zone_position']-1) # Kill our minion
-                        new_state_after_move['opponent_target'].pop(target['zone_position']-1) # Kill their minion
 
-                    elif target['atk'] >= card['health']: # If our minion dies
-                        new_state_after_move['player_target'].pop(card['zone_position']-1) # Kill our minion
-                        new_state_after_move['opponent_target'][target['zone_position']-1]['health'] -= card['atk'] # Update their minion's hp
+                    # TODO:
+                    # 1. substract to all
+                    # 2. if self is dead pop
+                    # 3. if other is dead pop
 
-                    elif card['atk'] >= target['health']: # If their minion dies
-                        new_state_after_move['opponent_target'].pop(target['zone_position']-1) # Kill their minion
-                        new_state_after_move['player_target'][card['zone_position']-1]['health'] -= target['atk'] # Update our minion's hp
+                    if target['atk'] >= card['health'] and card['atk'] >= target['health']:  # If both minions die
+                        new_state_after_move['player_target'].pop(card['zone_position'] - 1)  # Kill our minion
+                        new_state_after_move['opponent_target'].pop(target['zone_position'] - 1)  # Kill their minion
+
+                    elif target['atk'] >= card['health']:  # If our minion dies
+                        new_state_after_move['player_target'].pop(card['zone_position'] - 1)  # Kill our minion
+                        new_state_after_move['opponent_target'][target['zone_position'] - 1]['health'] -= card[
+                            'atk']  # Update their minion's hp
+
+                    elif card['atk'] >= target['health']:  # If their minion dies
+                        new_state_after_move['opponent_target'].pop(target['zone_position'] - 1)  # Kill their minion
+                        new_state_after_move['player_target'][card['zone_position'] - 1]['health'] -= target[
+                            'atk']  # Update our minion's hp
 
         elif card["type"] == "spell":
+            # TODO: build spells
             pass
-
 
         return new_state_after_move  # TODO: effectively change the state.
 
@@ -154,5 +164,7 @@ class WorldMap:
 
         if mana >= 0:
             return True
+
+        # TODO double check if there is no other conditions.
 
         return False
