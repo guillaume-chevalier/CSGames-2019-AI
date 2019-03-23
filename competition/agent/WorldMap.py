@@ -153,14 +153,14 @@ class WorldMap:
                     if new_state_after_move['opponent_target'][target[target_position]]['health'] <= 0:
                         # If their minion is dead, remove it
                         new_state_after_move['opponent_target'].pop(target_position)
-                
+
 
             elif card["type"] == "spell":
                 # TODO: build spells
                 #new_state_after_move = function_that_changes_the_state_from_card_id() #to implement
                 pass
 
-            new_state_after_move["player_mana"] -= card['cost']
+        new_state_after_move["player_mana"] -= card['cost']
 
         return new_state_after_move  # TODO: effectively change the state.
 
