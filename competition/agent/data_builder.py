@@ -1,13 +1,75 @@
+import datetime
+import os
 import statistics
+import random
+import pickle
+import json
+from glob import glob
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import Pipeline
+import sklearn.neural_network
+from sklearn.utils.validation import check_is_fitted
 
 from agent.WorldMap import WorldMap
 
+
+class DataSaver:
+
+    def __init__(self):
+        self.json_path = "./training_jsons/"
+        if not os.path.exists(self.json_path):
+            os.mkdir(self.json_path)
+
+        self.loaded_jsons = []
+        self.loaded_jsons_y = []
+        self.load_jsons()
+
+    def load_jsons(self):
+        self.loaded_jsons = []
+        self.loaded_jsons_y = []
+
+        jsons = glob(self.json_path + "*")
+
+        for j in jsons[-1000:]:
+            if ".json" in j:
+                with open(j, "r") as fppw:
+                    jj = json.load(fppw)
+                self.loaded_jsons.append(jj)
+                filenamme = j.split(os.sep)[-1]
+                this_y = int(filenamme[:1])
+                self.loaded_jsons_y.append(this_y)
+
+    def add_json(self, _json, was_success_integer):
+        self._add_json(_json, was_success_integer)
+        self.load_jsons()
+
+    def add_jsons(self, _jsons, was_success_integers):
+        for _json, was_success_integer in zip(_jsons, was_success_integers):
+            self._add_json(_json, was_success_integer)
+        self.load_jsons()
+
+    def _add_json(self, _json, was_success_integer):
+        _date = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")
+        filename = os.path.join(self.json_path, str(was_success_integer) + "_" + _date + ".json")
+        with open(filename, "w") as fpp:
+            print(_json)
+            json.dump(_json, fpp)
+
+    def get_x_y(self):
+        return self.loaded_jsons, self.loaded_jsons_y
+
+
+random.seed(7)
+
 WORLD_MAP = None
 PIPELINE = None
+IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
+IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
+ALL_MY_MOVES_TRIPLETS = []
+DS = DataSaver()
 
 
 # Modify this function
@@ -30,17 +92,31 @@ class Featurize(BaseEstimator, TransformerMixin):
         return np.array(X)
 
     def transform_one(self, x):
-        state = x
+        state, move, new_state = x
         new_x = []
         MAX_NUM_CARDS = 16  # TODO: 25?.
 
+        # Add the current state and expected state:
+        self.process_a_state(MAX_NUM_CARDS, new_x, state)
+        self.process_a_state(MAX_NUM_CARDS, new_x, new_state)
+
+        # Add the move:
+        new_x.append(move[0])
+        a = move[1][0]
+        b = move[1][1]
+        new_x.append(a if a is not None else -1)
+        new_x.append(b if b is not None else -1)
+
+        new_x = [float(xx) for xx in new_x]
+        return new_x
+
+    def process_a_state(self, MAX_NUM_CARDS, new_x, state):
         # STATIC:
         new_x.append(state['player_health'])
         new_x.append(state['player_mana'])
         new_x.append(state['n_opponent_hand'])
         new_x.append(state['opponent_health'])
         new_x.append(state['opponent_mana'])
-
         # HEROS:
         at_least_two_heros = 0
         for target_key in ["opponent_target", "player_target"]:
@@ -59,7 +135,6 @@ class Featurize(BaseEstimator, TransformerMixin):
                     new_x.append(target["health"])
                     # new_x.append(target["zone_position"])
         assert at_least_two_heros == 2, "FAILURE."  # TODO: remove all asserts.
-
         # MY PLAYER CARDS:
         my_cards = [0 for _ in range(MAX_NUM_CARDS)]
         my_cards_costs = [0 for _ in range(MAX_NUM_CARDS)]  # TODO: number of cards.
@@ -77,6 +152,14 @@ class Featurize(BaseEstimator, TransformerMixin):
         new_x.append(statistics.stdev(my_cards_costs))
 
         # PLAYER MINIONS:
+        self.extract_minions(MAX_NUM_CARDS, new_x, state, 0)
+        self.extract_minions(MAX_NUM_CARDS, new_x, state, 1)
+        self.extract_minions(MAX_NUM_CARDS, new_x, state, 2)
+
+    def extract_minions(self, MAX_NUM_CARDS, new_x, state, idx=0):
+        """
+        new_x is updated to add what's seen.
+        """
         my_minions = [0 for _ in range(MAX_NUM_CARDS)]
         my_minions_hp = [0 for _ in range(MAX_NUM_CARDS)]
         my_minions_max_hp = [0 for _ in range(MAX_NUM_CARDS)]
@@ -89,7 +172,9 @@ class Featurize(BaseEstimator, TransformerMixin):
         my_minions_opwered = [0 for _ in range(MAX_NUM_CARDS)]
         my_minions_turns = [0 for _ in range(MAX_NUM_CARDS)]
         my_minions_zone_pos = [0 for _ in range(MAX_NUM_CARDS)]
-        for minion in state["player_hand"]:
+        key = ["player_hand", "opponent_target", "player_target"][int(idx)]
+
+        for minion in state[key]:
             """
             _minion = {'atk': 1,
                       'buffs': [],
@@ -140,51 +225,100 @@ class Featurize(BaseEstimator, TransformerMixin):
             new_x.append(statistics.stdev(f))
 
 
-        # TARGETS:
-        # TODO: finally this is same as PLAYER MINIONS above but on game.
+class NeuralNetwork(sklearn.neural_network.MLPClassifier):
 
-        return None
-
-
-class NeuralNetwork(BaseEstimator, TransformerMixin):
-    pass
+    def transform(self, X, y=None):
+        return self.predict(X)
 
 
 def start():
+    random.seed(7)
+    global WORLD_MAP, PIPELINE, IS_TRAINING_WITH_RANDOM, IS_ONLINE_TRAINING, ALL_MY_MOVES_TRIPLETS, DS
+    WORLD_MAP = None
+    PIPELINE = None
+    IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
+    IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
+    ALL_MY_MOVES_TRIPLETS = []
+    DS = DataSaver()
+
     print('start')
 
-    global PIPELINE
-    if PIPELINE is not None:
+    # LOAD MODEL.
+    if os.path.exists("dict.pickle"):
+        with open("dict.pickle", "rb") as pkl:
+            PIPELINE = pickle.load(pkl)
+
+    # OR CREATE MODEL.
+    if PIPELINE is None:
         PIPELINE = Pipeline([
             ('featurize', Featurize()),
-            ('model', NeuralNetwork())
+            ('model', NeuralNetwork(
+                # TODO: redo this.
+                shuffle=False,
+                early_stopping=True,
+                n_iter_no_change=30,
+                batch_size=2,
+                random_state=7
+            ))
         ])
+        X, y = DS.get_x_y()
+        if len(y) > 0:
+            PIPELINE.fit(X, y)
 
     return None
 
 
 # Modify this function
 def play(state):
-    global WORLD_MAP, PIPELINE
+    global WORLD_MAP, PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_TRAINING_WITH_RANDOM
     if WORLD_MAP is None:
         WORLD_MAP = WorldMap(state)
 
     top_move = None
+    top_move_new_state = None
     top_move_score = -1
-    """
+
     for move, new_state in WORLD_MAP.get_possible_moves().items():
-        move_score = PIPELINE.transform(state, move, new_state)
+        X = [(state, move, new_state)]
+        try:
+            _ = check_is_fitted(PIPELINE.named_steps["model"], "coefs_")
+        except NotFittedError as e:
+            print("WARNING: FIRST FIT.")
+            PIPELINE.fit(X*4, [1]*4)
+        move_score = PIPELINE.transform(X)[0]
+
+        if IS_TRAINING_WITH_RANDOM:
+            move_score += random.random() * 0.9
+
         if move_score > top_move_score:
             top_move = move
-    """
-    print(WORLD_MAP.get_possible_moves())
+            top_move_new_state = new_state
+            top_move_score = move_score
 
-    return 4, (None, None)
+    ALL_MY_MOVES_TRIPLETS.append(
+        (state, top_move, top_move_new_state)
+    )
+
+    return top_move
 
 
-# Modify this function
+# Modify this function4, (None, None)
 def end(victory):
-    print(f'Victor: {victory}')
+    print(f'Victor: {victory}. Training Neural Net:')
+    global WORLD_MAP, PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_ONLINE_TRAINING, DS
+
+    # RETRAIN.
+    if IS_ONLINE_TRAINING:
+
+        y = [int(victory) for _ in range(len(ALL_MY_MOVES_TRIPLETS))]
+        DS.add_jsons(ALL_MY_MOVES_TRIPLETS, y)
+
+        PIPELINE.fit(ALL_MY_MOVES_TRIPLETS, y)
+
+        # SAVE.
+        with open("model.pkl", "wb") as pkl:
+            pickle.dump(PIPELINE, pkl)
+
     return None
 
 
