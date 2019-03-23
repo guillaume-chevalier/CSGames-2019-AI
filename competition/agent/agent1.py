@@ -43,4 +43,3 @@ class CommunicateDebug:
 
     def recv(self):
         return self.out
-
