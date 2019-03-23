@@ -10,7 +10,7 @@ Because the action is an input to the deep reinforcement learning algorithm, one
 
 Ironically enough, we manually did a simulated annealing by changing the random value in the choice of the best action throughout training by stopping training, changing the value in the code, and resuming training (the random that is added in the function that choose which action to take). 
 
-Our algorithm is all coded in [this file](competition/data_builder.py).
+Our algorithm is all coded in [this file](competition/data_builder.py). You need the pickles (.pkl) and the json files (.json) in the subfolders for the algorithm to work, because it has been trained.  
 
 We may have failed submitting the solution properly on time at the end of the competition by submitting a corrupted zip file by error. Anyways, this is our solution. 
 
