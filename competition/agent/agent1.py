@@ -6,7 +6,7 @@ def start():
 
 # Modify this function
 def play(state):
-    return 0, (None,)
+    return 'a', (None,)
 
 
 # Modify this function
