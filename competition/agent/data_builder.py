@@ -32,7 +32,7 @@ class Featurize(BaseEstimator, TransformerMixin):
     def transform_one(self, x):
         state = x
         new_x = []
-        MAX_NUM_CARDS = 30  # TODO: try 25.
+        MAX_NUM_CARDS = 16  # TODO: 25?.
 
         # STATIC:
         new_x.append(state['player_health'])
@@ -107,7 +107,7 @@ class Featurize(BaseEstimator, TransformerMixin):
             """
             if minion["type"] == "minion":
                 _id = minion["id"]
-                my_minions[_id] = 1
+                my_minions[_id] += 1
                 my_minions_hp[_id] = minion["health"]
                 my_minions_max_hp[_id] = minion["max_health"]
                 my_minions_buffs[_id] = len(minion["buffs"])
@@ -141,7 +141,7 @@ class Featurize(BaseEstimator, TransformerMixin):
 
 
         # TARGETS:
-        # TODO: finally this is same as PLAYER MINIONS above but on game. 
+        # TODO: finally this is same as PLAYER MINIONS above but on game.
 
         return None
 
