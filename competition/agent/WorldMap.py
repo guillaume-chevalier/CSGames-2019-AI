@@ -145,12 +145,13 @@ class WorldMap:
                     new_state_after_move['opponent_target'][0]['health'] -= card['atk']
 
                 elif target['type'] == 'minion':
-                    new_state_after_move['player_target'][card[card_position]]['health'] -= target['atk']  # Update our minion's hp
-                    new_state_after_move['opponent_target'][target[target_position]]['health'] -= card['atk']  # Update their minion's hp
-                    if new_state_after_move['player_target'][card[card_position]]['health'] <= 0:
+
+                    new_state_after_move['player_target'][card[card_position]]]['health'] -= target['atk']  # Update our minion's hp
+                    new_state_after_move['opponent_target'][target[target_position]]]['health'] -= card['atk']  # Update their minion's hp
+                    if new_state_after_move['player_target'][card[card_position]]]['health'] <= 0:
                         # If our minion is dead, remove it
                         new_state_after_move['player_target'].pop(card_position)
-                    if new_state_after_move['opponent_target'][target[target_position]]['health'] <= 0:
+                    if new_state_after_move['opponent_target'][target[target_position]]]['health'] <= 0:
                         # If their minion is dead, remove it
                         new_state_after_move['opponent_target'].pop(target_position)
 
