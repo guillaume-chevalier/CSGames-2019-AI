@@ -242,8 +242,8 @@ def start():
     print('start')
 
     # LOAD MODEL.
-    if os.path.exists("dict.pickle"):
-        with open("dict.pickle", "rb") as pkl:
+    if os.path.exists("model.pkl"):
+        with open("model.pkl", "rb") as pkl:
             PIPELINE = pickle.load(pkl)
 
     # OR CREATE MODEL.
