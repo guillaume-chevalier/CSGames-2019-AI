@@ -101,15 +101,15 @@ class WorldMap:
 
         #print(self.state['player_target'])
         for minion in self.state['player_target']:  # Moves for minions on the board
-            print(self.state['player_target'])
+            # print(self.state['player_target'])
 
             if minion['type'] == 'minion':
                 minion_position = copy(minion['zone_position'])
-                print('minion')
+                # print('minion')
                 for target in self.state['opponent_target']:
                     target_position = target['zone_position'] # ....
                     new_state_after_move = self.compute_new_state_for_card(minion, self.state, target)
-                    print(self.is_move_possible(minion, self.state, new_state_after_move)) # TODO:REMOVE
+                    # print(self.is_move_possible(minion, self.state, new_state_after_move)) # TODO:REMOVE
                     is_move_possible = self.is_move_possible(minion, self.state, new_state_after_move)
 
                     if is_move_possible:
@@ -141,7 +141,7 @@ class WorldMap:
         elif target is not None:
             if card['type'] == 'minion':
                 if target['type'] == 'hero':
-                    print('hero')
+                    # print('hero')
                     new_state_after_move['opponent_target'][0]['health'] -= card['atk']
 
                 elif target['type'] == 'minion':
@@ -160,11 +160,12 @@ class WorldMap:
                 #new_state_after_move = function_that_changes_the_state_from_card_id() #to implement
                 pass
 
+            new_state_after_move["player_mana"] -= card['cost']
+
         return new_state_after_move  # TODO: effectively change the state.
 
     def is_move_possible(self, card, state, new_state_after_move):
         mana = deepcopy(new_state_after_move['player_mana'])
-        mana -= card['cost']
 
         if mana >= 0:
             return True

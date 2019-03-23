@@ -55,7 +55,7 @@ class DataSaver:
         _date = str(datetime.datetime.now()).replace(" ", "_").replace(":", "-")
         filename = os.path.join(self.json_path, str(was_success_integer) + "_" + _date + ".json")
         with open(filename, "w") as fpp:
-            print(_json)
+            # print(_json)
             json.dump(_json, fpp)
 
     def get_x_y(self):
@@ -64,7 +64,6 @@ class DataSaver:
 
 random.seed(7)
 
-WORLD_MAP = None
 PIPELINE = None
 IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
 IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
@@ -233,8 +232,7 @@ class NeuralNetwork(sklearn.neural_network.MLPClassifier):
 
 def start():
     random.seed(7)
-    global WORLD_MAP, PIPELINE, IS_TRAINING_WITH_RANDOM, IS_ONLINE_TRAINING, ALL_MY_MOVES_TRIPLETS, DS
-    WORLD_MAP = None
+    global PIPELINE, IS_TRAINING_WITH_RANDOM, IS_ONLINE_TRAINING, ALL_MY_MOVES_TRIPLETS, DS
     PIPELINE = None
     IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
     IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
@@ -271,25 +269,28 @@ def start():
 
 # Modify this function
 def play(state):
-    global WORLD_MAP, PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_TRAINING_WITH_RANDOM
-    if WORLD_MAP is None:
-        WORLD_MAP = WorldMap(state)
+    global PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_TRAINING_WITH_RANDOM
+    world_map = WorldMap(state)
 
     top_move = None
     top_move_new_state = None
     top_move_score = -1
 
-    for move, new_state in WORLD_MAP.get_possible_moves().items():
+    for move, new_state in world_map.get_possible_moves().items():
         X = [(state, move, new_state)]
         try:
             _ = check_is_fitted(PIPELINE.named_steps["model"], "coefs_")
+            move_score = PIPELINE.transform(X)[0]
         except NotFittedError as e:
-            print("WARNING: FIRST FIT.")
-            PIPELINE.fit(X*4, [1]*4)
-        move_score = PIPELINE.transform(X)[0]
+            print("WARNING: RANDOM MOVE.")
+            move_score = random.random()
+            # print("WARNING: FIRST FIT.")
+            # PIPELINE.fit(X*4, [1]*4)
 
         if IS_TRAINING_WITH_RANDOM:
             move_score += random.random() * 0.9
+
+            print("----------", move, move_score)
 
         if move_score > top_move_score:
             top_move = move
@@ -300,6 +301,7 @@ def play(state):
         (state, top_move, top_move_new_state)
     )
 
+    print("My move:", top_move)
     return top_move
 
 
@@ -311,7 +313,7 @@ def end(victory):
         victory = victory[0]
 
     print(f'Victor: {victory}. Training Neural Net:')
-    global WORLD_MAP, PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_ONLINE_TRAINING, DS
+    global PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_ONLINE_TRAINING, DS
 
     # RETRAIN.
     if IS_ONLINE_TRAINING:
