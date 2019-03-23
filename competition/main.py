@@ -35,7 +35,7 @@ def play_card(player, dest, card_position, target, *args):
     card = cards[card_position]
     if not card.is_playable():
         return True
-    targets = [dest.hero] + [dest.field]
+    targets = [dest.hero] + dest.field
     t = targets[target]
     if 'List' in str(type(t)) or type(t) == 'list':
         t = t[0]
