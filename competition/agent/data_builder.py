@@ -44,10 +44,13 @@ def play(state):
 
     top_move = None
     top_move_score = -1
+    """
     for move, new_state in WORLD_MAP.get_possible_moves().items():
         move_score = PIPELINE.transform(state, move, new_state)
         if move_score > top_move_score:
             top_move = move
+    """
+    print(WORLD_MAP.get_possible_moves())
 
     return 4, (None, None)
 
