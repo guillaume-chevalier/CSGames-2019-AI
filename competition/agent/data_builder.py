@@ -261,9 +261,10 @@ def start():
                 random_state=7
             ))
         ])
-        X, y = DS.get_x_y()
-        if len(y) > 0:
-            PIPELINE.fit(X, y)
+
+    X, y = DS.get_x_y()
+    if len(y) > 0:
+        PIPELINE.fit(X, y)
 
     return None
 
@@ -304,6 +305,11 @@ def play(state):
 
 # Modify this function4, (None, None)
 def end(victory):
+
+    if hasattr(victory, "__len__"):
+        assert len(victory) == 1, victory
+        victory = victory[0]
+
     print(f'Victor: {victory}. Training Neural Net:')
     global WORLD_MAP, PIPELINE, ALL_MY_MOVES_TRIPLETS, IS_ONLINE_TRAINING, DS
 
