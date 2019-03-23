@@ -72,10 +72,30 @@ class WorldMap:
         possible_moves_dict = dict()
 
         for is_move_possible, move, new_state_after_move in self.get_all_possible_moves():
-            if is_move_possible:
-                possible_moves_dict[move] = new_state_after_move
+            possible_moves_dict[move] = new_state_after_move
 
         return possible_moves_dict
 
     def get_all_possible_moves(self):
-        yield False, False, False
+
+        for card in self.state["player_hand"]:
+            new_state_after_move = self.compute_new_state_for_card(card, self.state)
+
+            is_move_possible = self.is_move_possible(card, self.state, new_state_after_move)
+
+            if is_move_possible:
+                move = 4, (None, None)
+                yield is_move_possible, move, new_state_after_move
+
+        if self.state["player_mana"] >= 2:
+            yield True,
+
+    def compute_new_state_for_card(self, card, state):
+        if card["type"] == "minion":
+            pass
+        elif card["type"] == "":
+            pass
+        return deepcopy(state)  # TODO: effectively change the state.
+
+    def is_move_possible(self, cards, state, new_state_after_move):
+        return False  # TODO: check mana.
