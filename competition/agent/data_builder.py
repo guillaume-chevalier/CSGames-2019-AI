@@ -266,8 +266,8 @@ class DataSaver:
 random.seed(7)
 
 PIPELINE = None
-IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
-IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
+IS_TRAINING_WITH_RANDOM = False  # TODO: set to false to finalize.
+IS_ONLINE_TRAINING = False  # TODO: set to false to finalize.
 ALL_MY_MOVES_TRIPLETS = []
 DS = DataSaver()
 
@@ -437,8 +437,8 @@ def start():
     random.seed(7)
     global PIPELINE, IS_TRAINING_WITH_RANDOM, IS_ONLINE_TRAINING, ALL_MY_MOVES_TRIPLETS, DS
     PIPELINE = None
-    IS_TRAINING_WITH_RANDOM = True  # TODO: set to false to finalize.
-    IS_ONLINE_TRAINING = True  # TODO: set to false to finalize.
+    IS_TRAINING_WITH_RANDOM = False  # TODO: set to false to finalize.
+    IS_ONLINE_TRAINING = False  # TODO: set to false to finalize.
     ALL_MY_MOVES_TRIPLETS = []
     DS = DataSaver()
 
@@ -465,7 +465,8 @@ def start():
 
     X, y = DS.get_x_y()
     if len(y) > 0:
-        PIPELINE.fit(X, y)
+        # PIPELINE.fit(X, y)
+        pass
 
     return None
 
