@@ -6,7 +6,7 @@ Solution: Deep Reinforcement Learning.
 - Inputs to the ML pipeline: featurized game state, action to do, predicted resulting game state. 
 - Outputs to the ML pipeline: probability to win the game by doing that move. 
 
-Because the action is an input to the deep reinforcement learning algorithm, one must try every actions (with all of their guessed resulting game state) and choose the one that maximizes the probability to train the game. 
+Because the action is an input to the deep reinforcement learning algorithm, one must try every actions (with all of their guessed resulting game state) and choose the one that maximizes the probability to play the game. 
 
 Ironically enough, we manually did a simulated annealing by changing the random value in the choice of the best action throughout training by stopping training, changing the value in the code, and resuming training (the random that is added in the function that choose which action to take). 
 
